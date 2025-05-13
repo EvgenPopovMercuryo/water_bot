@@ -5,9 +5,12 @@ import sqlite3
 import os
 import pytz
 
+# Определяем путь к базе данных
+DB_PATH = os.path.join(os.getenv('DATA_DIR', ''), 'water_bot.db')
+
 def init_database():
-    if not os.path.exists('water_bot.db'):
-        conn = sqlite3.connect('water_bot.db')
+    if not os.path.exists(DB_PATH):
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute('''
             CREATE TABLE water_intake (
@@ -30,7 +33,7 @@ def init_database():
         conn.close()
 
 def add_water_record(user_id: int, amount: int):
-    conn = sqlite3.connect('water_bot.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute('''
         INSERT INTO water_intake (user_id, amount, timestamp)
@@ -40,7 +43,7 @@ def add_water_record(user_id: int, amount: int):
     conn.close()
 
 def get_statistics(user_id: int):
-    conn = sqlite3.connect('water_bot.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     today = datetime.now().date()
     cursor.execute('''
@@ -62,7 +65,7 @@ def get_statistics(user_id: int):
     return today_amount, weekly_data
 
 def set_reminder_settings(user_id: int, start_time: str, end_time: str, interval: int):
-    conn = sqlite3.connect('water_bot.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute('''
         INSERT OR REPLACE INTO reminders 
@@ -73,7 +76,7 @@ def set_reminder_settings(user_id: int, start_time: str, end_time: str, interval
     conn.close()
 
 def get_reminder_settings(user_id: int):
-    conn = sqlite3.connect('water_bot.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute('SELECT start_time, end_time, interval, is_active FROM reminders WHERE user_id = ?', (user_id,))
     result = cursor.fetchone()
@@ -199,7 +202,7 @@ async def handle_water_input(update: Update, context: ContextTypes.DEFAULT_TYPE)
         current_jobs = context.job_queue.get_jobs_by_name(str(user_id))
         for job in current_jobs:
             job.schedule_removal()
-        conn = sqlite3.connect('water_bot.db')
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute('UPDATE reminders SET is_active = FALSE WHERE user_id = ?', (user_id,))
         conn.commit()

@@ -2,8 +2,14 @@ services:
   - type: worker
     name: water-bot
     env: python
+    region: frankfurt
     buildCommand: pip install -r requirements.txt
     startCommand: python bot.py
+    autoDeploy: true
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.0 
+        value: 3.11.0
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1 
